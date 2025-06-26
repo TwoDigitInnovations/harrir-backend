@@ -56,12 +56,12 @@ module.exports = {
 
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ status: false, message: 'Invalid credentials' });
+        return res.status(401).json({ status: false, message: 'email not found' });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).json({ status: false, message: 'Invalid credentials' });
+        return res.status(401).json({ status: false, message: 'password missmatch' });
       }
 
       const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {

@@ -22,7 +22,44 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["PublicProfile", "ProfessionalProfile"], // Define user roles
+      enum: ["PublicProfile", "ProfessionalProfile"],
+    },
+    fullName: {
+      type: String,
+      trim: true,
+      minlength: [2, "Full name must be at least 2 characters"],
+    },
+    professionalTitle: {
+      type: String,
+      trim: true,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"],
+    },
+    linkedinUrl: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return !v || v.includes("linkedin.com");
+        },
+        message: "LinkedIn URL must contain linkedin.com",
+      },
+    },
+
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: [500, "Bio must not exceed 500 characters"],
+    },
+    profileImage: {
+      type: String,
     },
     createdAt: {
       type: Date,
