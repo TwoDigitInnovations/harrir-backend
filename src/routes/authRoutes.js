@@ -7,8 +7,11 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
+  getAllProfileBaseOnRole
 } = require("@controllers/authController");
 
+const { upload } = require("../services/fileUploads");
+const { fileUpload } = require("@controllers/user");
 const { authenticate } = require("@middlewares/authMiddleware");
 
 const router = express.Router();
@@ -18,6 +21,8 @@ router.post("/profile", authenticate, getUser);
 router.post("/sendOTP", sendOTP);
 router.post("/updateProfile", updateProfile);
 router.post("/verifyOTP", verifyOTP);
-router.post("/changePassword", changePassword);
+router.post("/changePassword", changePassword); 
+router.get("/getAllProfileBaseOnRole", getAllProfileBaseOnRole)
+router.post("/fileupload", upload.single("file"), fileUpload);
 
 module.exports = router;

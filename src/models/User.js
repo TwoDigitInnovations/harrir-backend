@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema(
+const options = { discriminatorKey: "role", timestamps: true };
+
+const baseUserSchema = new mongoose.Schema(
   {
     email: {
       type: String,
@@ -19,24 +21,37 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: [6, "Password must be at least 6 characters long"],
     },
-
     role: {
       type: String,
-      enum: ["PublicProfile", "ProfessionalProfile"],
+      required: true,
+      enum: ["professional", "company"],
     },
-    fullName: {
-      type: String,
-      trim: true,
-      minlength: [2, "Full name must be at least 2 characters"],
+    profileImage: { type: String },
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
-    professionalTitle: {
-      type: String,
-      trim: true,
-    },
-    location: {
-      type: String,
-      trim: true,
-    },
+  },
+  options
+);
+
+baseUserSchema.methods.isPasswordMatch = async function (password) {
+  return password === this.password;
+};
+
+baseUserSchema.methods.encryptPassword = (password) => {
+  return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+};
+
+const User = mongoose.model("User", baseUserSchema);
+
+// ✅ Discriminator: Professional
+const Professional = User.discriminator(
+  "professional",
+  new mongoose.Schema({
+    fullName: { type: String, trim: true },
+    professionalTitle: { type: String, trim: true },
+    location: { type: String, trim: true },
     phone: {
       type: String,
       trim: true,
@@ -46,37 +61,85 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       validate: {
-        validator: function (v) {
-          return !v || v.includes("linkedin.com");
-        },
+        validator: (v) => !v || v.includes("linkedin.com"),
         message: "LinkedIn URL must contain linkedin.com",
       },
     },
-
-    bio: {
-      type: String,
-      trim: true,
-      maxlength: [500, "Bio must not exceed 500 characters"],
-    },
-    profileImage: {
-      type: String,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { timestamps: true }
+    bio: { type: String, trim: true, maxlength: 1500 },
+    skills: [String],
+    experience: [
+      {
+        jobTitle: String,
+        company: String,
+        location: String,
+        duration: String,
+        description: String,
+      },
+    ],
+    education: [
+      {
+        degree: String,
+        institution: String,
+        year: String,
+        description: String,
+      },
+    ],
+    referees: [
+      {
+        fullName: String,
+        title: String,
+        organization: String,
+        email: String,
+        contact: Number,
+      },
+    ],
+    languages: [
+      {
+        language: String,
+        level: String,
+      },
+    ],
+  })
 );
 
-userSchema.methods.isPasswordMatch = async function (password) {
-  return password === this.password;
-};
+// ✅ Discriminator: Company
+const Company = User.discriminator(
+  "company",
+  new mongoose.Schema({
+    companyName: { Type: String },
+    industrySector: String,
+    location: String,
+    website: String,
+    phone: String,
+    companySize: String,
+    foundedYear: String,
+    companyDescription: String,
+    aboutUs: String,
+    missionStatement: String,
+    visionStatement: String,
+    companyLogo: String,
+    services: [String],
+    specializations:[{
+      title:String,
+      description:String
+    }],
+    projects: [
+      {
+        title: String,
+        client: String,
+        yearCompleted: String,
+        description: String,
+      },
+    ],
+    teamMembers: [
+      {
+        fullName: String,
+        designation: String,
+        description: String,
+      },
+    ],
+  })
+);
 
-userSchema.methods.encryptPassword = (password) => {
-  return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-};
-
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+// ✅ Export all
+module.exports = { User, Professional, Company };

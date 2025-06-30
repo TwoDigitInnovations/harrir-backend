@@ -1,49 +1,59 @@
-const User = require('@models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { User, Professional, Company } = require("../models/User");
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const response = require("../../responses");
-const Verification = require('@models/verification');
+const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 
 module.exports = {
   register: async (req, res) => {
-    console.log("REQ BODY:", req.body);
     try {
-      const { name, email, password, phone } = req.body;
+      const { role, email, password, ...rest } = req.body;
+
+      if (!role || !["professional", "company"].includes(role)) {
+        return res.status(400).json({ message: "Invalid or missing role" });
+      }
 
       if (password.length < 6) {
         return res
           .status(400)
-          .json({ message: 'Password must be at least 6 characters long' });
+          .json({ message: "Password must be at least 6 characters long" });
       }
 
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
+        return res.status(400).json({ message: "User already exists" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser = new User({
-        name,
+      const userData = {
         email,
         password: hashedPassword,
-        phone,
+        role,
+        ...rest,
+      };
+
+      let newUser;
+      if (role === "professional") {
+        newUser = await Professional.create(userData);
+      } else if (role === "company") {
+        newUser = await Company.create(userData);
+      }
+
+      const userResponse = await User.findById(newUser._id).select("-password");
+
+      return res.status(201).json({
+        message: "User registered successfully",
+        user: userResponse,
       });
-
-      await newUser.save();
-
-      const userResponse = await User.findById(newUser._id).select('-password');
-
-      res
-        .status(201)
-        .json({ message: 'User registered successfully', user: userResponse });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      return res.status(500).json({ message: "Server error" });
     }
   },
   login: async (req, res) => {
@@ -51,52 +61,63 @@ module.exports = {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res.status(400).json({ status: false, message: 'Email and password are required' });
+        return res
+          .status(400)
+          .json({ status: false, message: "Email and password are required" });
       }
 
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ status: false, message: 'email not found' });
+        return res
+          .status(401)
+          .json({ status: false, message: "Email not found" });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).json({ status: false, message: 'password missmatch' });
+        return res
+          .status(401)
+          .json({ status: false, message: "Password mismatch" });
       }
 
-      const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
-        expiresIn: '4h',
-      });
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "4h" }
+      );
+
+      const userWithoutPassword = user.toObject();
+      delete userWithoutPassword.password;
 
       return res.json({
         status: true,
         data: {
           token,
-          role: user.role, // ✅ Ensure user.type exists in your DB
-          id: user._id,
-          email: user.email,
-          name: user.name,
+          user: userWithoutPassword,
         },
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ status: false, message: 'Server error' });
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
-
 
   getUser: async (req, res) => {
     try {
       const { userId } = req.body;
 
       if (!userId) {
-        return res.status(400).json({ status: false, message: "User ID is required" });
+        return res
+          .status(400)
+          .json({ status: false, message: "User ID is required" });
       }
 
       const user = await User.findById(userId).select("-password");
 
       if (!user) {
-        return res.status(404).json({ status: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
 
       res.status(200).json({
@@ -123,15 +144,19 @@ module.exports = {
       }
 
       // Combine first and last name from request
-      const fullNameFromRequest = `${firstName} ${lastName}`.trim().toLowerCase();
+      const fullNameFromRequest = `${firstName} ${lastName}`
+        .trim()
+        .toLowerCase();
       const fullNameFromDB = user.name?.trim().toLowerCase();
 
       if (fullNameFromRequest !== fullNameFromDB) {
-        return response.badReq(res, { message: "Name and email do not match our records." });
+        return response.badReq(res, {
+          message: "Name and email do not match our records.",
+        });
       }
 
       // OTP logic
-      const ran_otp = '0000'; // temporary static OTP
+      const ran_otp = "0000"; // temporary static OTP
 
       const ver = new Verification({
         email: email,
@@ -145,12 +170,10 @@ module.exports = {
       const token = await userHelper.encode(ver._id);
 
       return response.ok(res, { message: "OTP sent.", token });
-
     } catch (error) {
       return response.error(res, error);
     }
   },
-
 
   verifyOTP: async (req, res) => {
     try {
@@ -208,35 +231,75 @@ module.exports = {
   },
 
   updateProfile: async (req, res) => {
-  try {
-    const { userId, ...updateData } = req.body;
+    try {
+      const { userId, ...updateData } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ status: false, message: 'User ID is required' });
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ status: false, message: "User ID is required" });
+      }
+
+      // Find the user to get the role (required for discriminators)
+      const user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
+      }
+
+      // Determine which model to use based on role
+      let updatedUser;
+      if (user.role === "professional") {
+        updatedUser = await Professional.findByIdAndUpdate(userId, updateData, {
+          new: true,
+          runValidators: true,
+        }).select("-password");
+      } else if (user.role === "company") {
+        updatedUser = await Company.findByIdAndUpdate(userId, updateData, {
+          new: true,
+          runValidators: true,
+        }).select("-password");
+      } else {
+        return res
+          .status(400)
+          .json({ status: false, message: "Invalid user role" });
+      }
+
+      return res.status(200).json({
+        status: true,
+        message: "Profile updated successfully",
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Internal server error",
+        error: error.message,
+      });
     }
+  },
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
+  getAllProfileBaseOnRole: async (req, res) => {
+    try {
+      const { role } = req.query;
 
-    if (!updatedUser) {
-      return res.status(404).json({ status: false, message: 'User not found' });
+      // Build query dynamically
+      const query = role ? { role } : {}; // If role is present, filter; else get all
+
+      const user = await User.find(query);
+
+      res.status(200).json({
+        status: true,
+        message: "User profile fetched successfully",
+        data: user,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: false,
+        message: error.message || "Internal Server Error",
+      });
     }
-
-    return res.status(200).json({
-      status: true,
-      message: 'Profile updated successfully',
-      data: updatedUser,
-    });
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    return res.status(500).json({
-      status: false,
-      message: 'Internal server error',
-      error: error.message,
-    });
-  }
-},
-
+  },
 };
