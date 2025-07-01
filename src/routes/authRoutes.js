@@ -7,7 +7,8 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
-  getAllProfileBaseOnRole
+  getAllProfileBaseOnRole,
+  getAllSearchResult,
 } = require("@controllers/authController");
 
 const { upload } = require("../services/fileUploads");
@@ -21,8 +22,10 @@ router.post("/profile", authenticate, getUser);
 router.post("/sendOTP", sendOTP);
 router.post("/updateProfile", updateProfile);
 router.post("/verifyOTP", verifyOTP);
-router.post("/changePassword", changePassword); 
-router.get("/getAllProfileBaseOnRole", getAllProfileBaseOnRole)
+router.post("/changePassword", changePassword);
+router.get("/getAllProfileBaseOnRole", getAllProfileBaseOnRole);
 router.post("/fileupload", upload.single("file"), fileUpload);
+router.post("/getAllSearchResult", getAllSearchResult);
+
 
 module.exports = router;

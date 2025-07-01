@@ -302,4 +302,44 @@ module.exports = {
       });
     }
   },
+
+  getAllSearchResult: async (req, res) => {
+    try {
+      const { role, searchTerm } = req.query;
+
+      // Start building dynamic query
+      const query = {};
+
+      // If role is present, filter by it
+      if (role) {
+        query.role = role;
+      }
+      if (req.body.selectedLocation) {
+        query.location = req.body.selectedLocation;
+      }
+      // If search term is present, apply OR-based search
+      if (searchTerm) {
+        const searchRegex = new RegExp(searchTerm, "i"); // case-insensitive
+
+        query.$or = [
+          { companyName: searchRegex },
+          { fullName: searchRegex },
+          { skills: { $in: [searchRegex] } },
+        ];
+      }
+
+      const users = await User.find(query);
+
+      res.status(200).json({
+        status: true,
+        message: "User profile fetched successfully",
+        data: users,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  },
 };
