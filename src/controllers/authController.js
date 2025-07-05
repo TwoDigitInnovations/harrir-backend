@@ -6,8 +6,6 @@ const response = require("../../responses");
 const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 
 module.exports = {
   register: async (req, res) => {
