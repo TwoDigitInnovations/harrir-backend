@@ -26,7 +26,7 @@ const baseUserSchema = new mongoose.Schema(
       required: true,
       enum: ["professional", "company"],
     },
-    profileImage: { type: String },
+
     createdAt: {
       type: Date,
       default: Date.now,
@@ -57,6 +57,8 @@ const Professional = User.discriminator(
       trim: true,
       match: [/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"],
     },
+    profileImage: { type: String },
+    coverImage: { type: String },
     linkedinUrl: {
       type: String,
       trim: true,
@@ -118,11 +120,14 @@ const Company = User.discriminator(
     missionStatement: String,
     visionStatement: String,
     companyLogo: String,
+    coverImage: String,
     services: [String],
-    specializations:[{
-      title:String,
-      description:String
-    }],
+    specializations: [
+      {
+        title: String,
+        description: String,
+      },
+    ],
     projects: [
       {
         title: String,
