@@ -5,23 +5,22 @@ const jwt = require("jsonwebtoken");
 const response = require("../../responses");
 const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
-
+const user = require("../helper/user");
 
 module.exports = {
   register: async (req, res) => {
     try {
       const { role, email, password, ...rest } = req.body;
-
-      if (!role || !["professional", "company"].includes(role)) {
+      console.log(role);
+      if (!role || !["professional", "company", "admin"].includes(role)) {
         return res.status(400).json({ message: "Invalid or missing role" });
       }
 
-      if (password.length < 6) {
+      if (!password || password.length < 6) {
         return res
           .status(400)
           .json({ message: "Password must be at least 6 characters long" });
       }
-
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
@@ -41,10 +40,11 @@ module.exports = {
         newUser = await Professional.create(userData);
       } else if (role === "company") {
         newUser = await Company.create(userData);
+      } else if (role === "Admin") {
+        newUser = await User.create(userData);
       }
 
       const userResponse = await User.findById(newUser._id).select("-password");
-
       return res.status(201).json({
         message: "User registered successfully",
         user: userResponse,
@@ -69,6 +69,21 @@ module.exports = {
         return res
           .status(401)
           .json({ status: false, message: "Email not found" });
+      }
+
+      if (user.status === "Pending") {
+        return res.status(403).json({
+          status: false,
+          message:
+            "Your account is pending approval from the admin. Please wait.",
+        });
+      }
+
+      if (user.status === "Rejected") {
+        return res.status(403).json({
+          status: false,
+          message: "Your account has been rejected. Please contact support.",
+        });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
@@ -282,8 +297,6 @@ module.exports = {
   getAllProfileBaseOnRole: async (req, res) => {
     try {
       const { role } = req.query;
-
-      // Build query dynamically
       const query = role ? { role } : {}; // If role is present, filter; else get all
 
       const user = await User.find(query);
@@ -338,6 +351,36 @@ module.exports = {
         status: false,
         message: error.message || "Internal Server Error",
       });
+    }
+  },
+  updateStatus: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const validStatuses = ["Pending", "Approved", "Rejected"];
+
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid Status value" });
+      }
+
+      const updatedData = await User.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+      );
+
+      if (!updatedData) {
+        return res.status(404).json({ message: "Data not found" });
+      }
+
+      res.status(200).json({
+        message: `Status updated to ${status}`,
+        data: updatedData,
+      });
+    } catch (error) {
+      console.error("Status update error:", error);
+      res.status(500).json({ message: "Server error" });
     }
   },
 };

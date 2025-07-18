@@ -9,6 +9,7 @@ const {
   updateProfile,
   getAllProfileBaseOnRole,
   getAllSearchResult,
+  updateStatus,
 } = require("@controllers/authController");
 
 const { upload } = require("../services/fileUploads");
@@ -26,6 +27,7 @@ router.post("/changePassword", changePassword);
 router.get("/getAllProfileBaseOnRole", getAllProfileBaseOnRole);
 router.post("/fileupload", upload.single("file"), fileUpload);
 router.post("/getAllSearchResult", getAllSearchResult);
+router.put("/updateStatus/:id", authenticate, updateStatus);
 
 
 module.exports = router;

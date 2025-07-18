@@ -24,7 +24,12 @@ const baseUserSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ["professional", "company"],
+      enum: ["professional", "company", "Admin"],
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
     },
 
     createdAt: {
@@ -45,7 +50,6 @@ baseUserSchema.methods.encryptPassword = (password) => {
 
 const User = mongoose.model("User", baseUserSchema);
 
-// ✅ Discriminator: Professional
 const Professional = User.discriminator(
   "professional",
   new mongoose.Schema({
