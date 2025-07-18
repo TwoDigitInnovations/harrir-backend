@@ -80,6 +80,11 @@ const Professional = User.discriminator(
         location: String,
         duration: String,
         description: String,
+        status: {
+          type: String,
+          enum: ["Pending", "Requested", "Approved", "Rejected"],
+          default: "Pending",
+        },
       },
     ],
     education: [
@@ -88,8 +93,14 @@ const Professional = User.discriminator(
         institution: String,
         year: String,
         description: String,
+        status: {
+          type: String,
+          enum: ["Pending", "Requested", "Approved", "Rejected"],
+          default: "Pending",
+        },
       },
     ],
+
     referees: [
       {
         fullName: String,

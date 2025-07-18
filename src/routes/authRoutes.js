@@ -10,6 +10,9 @@ const {
   getAllProfileBaseOnRole,
   getAllSearchResult,
   updateStatus,
+  getAllProfileForAdmin,
+  ExperienceVerification,
+  EducationVerification,
 } = require("@controllers/authController");
 
 const { upload } = require("../services/fileUploads");
@@ -28,6 +31,7 @@ router.get("/getAllProfileBaseOnRole", getAllProfileBaseOnRole);
 router.post("/fileupload", upload.single("file"), fileUpload);
 router.post("/getAllSearchResult", getAllSearchResult);
 router.put("/updateStatus/:id", authenticate, updateStatus);
-
-
+router.get("/getAllProfileForAdmin", getAllProfileForAdmin);
+router.post("/ExperienceVerification", ExperienceVerification);
+router.post("/EducationVerification", EducationVerification);
 module.exports = router;

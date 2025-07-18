@@ -59,40 +59,55 @@ module.exports = {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Email and password are required" });
-      }
-
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Email not found" });
-      }
-
-      if (user.status === "Pending") {
-        return res.status(403).json({
+        return res.status(400).json({
           status: false,
-          message:
-            "Your account is pending approval from the admin. Please wait.",
+          message: "Email and password are required",
         });
       }
 
-      if (user.status === "Rejected") {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(401).json({
+          status: false,
+          message: "Email not found",
+        });
+      }
+
+      const validRoles = ["Admin", "professional", "company"];
+      if (!validRoles.includes(user.role)) {
         return res.status(403).json({
           status: false,
-          message: "Your account has been rejected. Please contact support.",
+          message: "Role not found. Please contact support.",
         });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Password mismatch" });
+        return res.status(401).json({
+          status: false,
+          message: "Password mismatch",
+        });
       }
 
+      if (user.role !== "Admin") {
+        if (user.status === "Pending") {
+          return res.status(403).json({
+            status: false,
+            message:
+              "Your account is pending approval from the admin. Please wait.",
+          });
+        }
+
+        if (user.status === "Rejected") {
+          return res.status(403).json({
+            status: false,
+            message: "Your account has been rejected. Please contact support.",
+          });
+        }
+      }
+
+      // Generate token
       const token = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
@@ -111,7 +126,10 @@ module.exports = {
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ status: false, message: "Server error" });
+      return res.status(500).json({
+        status: false,
+        message: "Server error",
+      });
     }
   },
 
@@ -253,7 +271,6 @@ module.exports = {
           .json({ status: false, message: "User ID is required" });
       }
 
-      // Find the user to get the role (required for discriminators)
       const user = await User.findById(userId);
       if (!user) {
         return res
@@ -261,7 +278,6 @@ module.exports = {
           .json({ status: false, message: "User not found" });
       }
 
-      // Determine which model to use based on role
       let updatedUser;
       if (user.role === "professional") {
         updatedUser = await Professional.findByIdAndUpdate(userId, updateData, {
@@ -297,10 +313,28 @@ module.exports = {
   getAllProfileBaseOnRole: async (req, res) => {
     try {
       const { role } = req.query;
-      const query = role ? { role } : {}; // If role is present, filter; else get all
+      const query = {
+        ...(role && { role }),
+        status: "Approved", // ✅ Only fetch users with status "Approved"
+      };
 
       const user = await User.find(query);
 
+      res.status(200).json({
+        status: true,
+        message: "User profile fetched successfully",
+        data: user,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  },
+  getAllProfileForAdmin: async (req, res) => {
+    try {
+      const user = await User.find();
       res.status(200).json({
         status: true,
         message: "User profile fetched successfully",
@@ -318,20 +352,20 @@ module.exports = {
     try {
       const { role, searchTerm } = req.query;
 
-      // Start building dynamic query
-      const query = {};
+      const query = {
+        status: "Approved", // ✅ Only fetch users with Approved status
+      };
 
-      // If role is present, filter by it
       if (role) {
         query.role = role;
       }
+
       if (req.body.selectedLocation) {
         query.location = req.body.selectedLocation;
       }
-      // If search term is present, apply OR-based search
+
       if (searchTerm) {
         const searchRegex = new RegExp(searchTerm, "i"); // case-insensitive
-
         query.$or = [
           { companyName: searchRegex },
           { fullName: searchRegex },
@@ -353,6 +387,7 @@ module.exports = {
       });
     }
   },
+
   updateStatus: async (req, res) => {
     try {
       const { id } = req.params;
@@ -381,6 +416,101 @@ module.exports = {
     } catch (error) {
       console.error("Status update error:", error);
       res.status(500).json({ message: "Server error" });
+    }
+  },
+
+  ExperienceVerification: async (req, res) => {
+    try {
+      const { userId, experienceId, status } = req.body;
+
+      if (!userId || !experienceId) {
+        return res.status(400).json({
+          status: false,
+          message: "User ID and Experience ID are required",
+        });
+      }
+
+      const user = await Professional.findById(userId);
+      if (!user || user.role !== "professional") {
+        return res.status(404).json({
+          status: false,
+          message: "Professional user not found",
+        });
+      }
+
+      const experienceIndex = user.experience.findIndex(
+        (exp) => exp._id.toString() === experienceId
+      );
+
+      if (experienceIndex === -1) {
+        return res.status(404).json({
+          status: false,
+          message: "Experience entry not found",
+        });
+      }
+
+      user.experience[experienceIndex].status = status;
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "Experience verification requested successfully",
+        data: user.experience[experienceIndex],
+      });
+    } catch (error) {
+      console.error("Error requesting experience verification:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+  EducationVerification: async (req, res) => {
+    try {
+      const { userId, educationId, status } = req.body;
+
+      if (!userId || !educationId) {
+        return res.status(400).json({
+          status: false,
+          message: "User ID and Education ID are required",
+        });
+      }
+
+      const user = await Professional.findById(userId);
+      if (!user || user.role !== "professional") {
+        return res.status(404).json({
+          status: false,
+          message: "Professional user not found",
+        });
+      }
+
+      const educationIndex = user.education.findIndex(
+        (exp) => exp._id.toString() === educationId
+      );
+
+      if (educationIndex === -1) {
+        return res.status(404).json({
+          status: false,
+          message: "Education entry not found",
+        });
+      }
+
+      user.education[educationIndex].status = status;
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "Education verification requested successfully",
+        data: user.education[educationIndex],
+      });
+    } catch (error) {
+      console.error("Error requesting Education verification:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Internal server error",
+        error: error.message,
+      });
     }
   },
 };
