@@ -100,6 +100,20 @@ const Professional = User.discriminator(
         },
       },
     ],
+    certifications: [
+      {
+        certificateName: String,
+        issuerName: String,
+        issueDate: String,
+        certificateNumber: String,
+        attachmentUrl: String,
+        status: {
+          type: String,
+          enum: ["Pending", "Requested", "Approved", "Rejected"],
+          default: "Pending",
+        },
+      },
+    ],
 
     referees: [
       {

@@ -7,19 +7,23 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
+} = require("@controllers/authController");
+const {
   getAllProfileBaseOnRole,
   getAllSearchResult,
   updateStatus,
   getAllProfileForAdmin,
   ExperienceVerification,
   EducationVerification,
-} = require("@controllers/authController");
-
+  CertificationVerification
+} = require("@controllers/VerificationController");
+const { generatePDF } = require("@controllers/pdfController");
 const { upload } = require("../services/fileUploads");
 const { fileUpload } = require("@controllers/user");
 const { authenticate } = require("@middlewares/authMiddleware");
 
 const router = express.Router();
+
 router.post("/login", login);
 router.post("/register", register);
 router.post("/profile", authenticate, getUser);
@@ -34,4 +38,8 @@ router.put("/updateStatus/:id", authenticate, updateStatus);
 router.get("/getAllProfileForAdmin", getAllProfileForAdmin);
 router.post("/ExperienceVerification", ExperienceVerification);
 router.post("/EducationVerification", EducationVerification);
+router.post("/CertificationVerification", CertificationVerification);
+router.get("/genratePDF", generatePDF);  
+
+
 module.exports = router;
