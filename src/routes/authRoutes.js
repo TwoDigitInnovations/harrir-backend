@@ -7,6 +7,7 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
+ 
 } = require("@controllers/authController");
 const {
   getAllProfileBaseOnRole,
@@ -19,7 +20,7 @@ const {
 } = require("@controllers/VerificationController");
 
 const { upload } = require("../services/fileUploads");
-const { fileUpload } = require("@controllers/user");
+const { fileUpload, dashboardInfo } = require("@controllers/user");
 const { authenticate } = require("@middlewares/authMiddleware");
 
 const router = express.Router();
@@ -39,7 +40,7 @@ router.get("/getAllProfileForAdmin", getAllProfileForAdmin);
 router.post("/ExperienceVerification", ExperienceVerification);
 router.post("/EducationVerification", EducationVerification);
 router.post("/CertificationVerification", CertificationVerification);
-
+router.get("/dashboardInfo", dashboardInfo)
 
 
 module.exports = router;
