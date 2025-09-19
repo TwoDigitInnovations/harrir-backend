@@ -1,11 +1,11 @@
-const authService = require('@services/authService');
+const authService = require("@services/authService");
 
 module.exports = {
   authenticate: (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1];
+    const token = req.headers["authorization"]?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+      return res.status(401).json({ message: "No token provided" });
     }
 
     try {
@@ -13,7 +13,9 @@ module.exports = {
       req.user = decoded;
       next();
     } catch (error) {
-      return res.status(403).json({ message: 'Invalid token' });
+      return res
+        .status(403)
+        .json({ message: error.message || "Invalid token" });
     }
   },
 };

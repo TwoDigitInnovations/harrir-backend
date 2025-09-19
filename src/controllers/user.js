@@ -1,11 +1,10 @@
-const { User, Professional, Company } = require("../models/User");
+const { User } = require("../models/User");
 const response = require("../../responses");
 
 module.exports = {
   fileUpload: async (req, res) => {
     try {
       if (!req.file) {
-
         return response.badRequest(res, { message: "No file uploaded." });
       }
       return response.ok(res, {
@@ -20,8 +19,10 @@ module.exports = {
 
   dashboardInfo: async (req, res) => {
     try {
-      const totalUsers = await User.countDocuments(); // sabhi users
-      const totalProfessionals = await User.countDocuments({ role: "professional" });
+      const totalUsers = await User.countDocuments();
+      const totalProfessionals = await User.countDocuments({
+        role: "professional",
+      });
       const totalCompanies = await User.countDocuments({ role: "company" });
 
       const activeProfiles = await User.countDocuments({ status: "Approved" });

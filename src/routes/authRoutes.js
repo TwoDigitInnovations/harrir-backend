@@ -7,7 +7,6 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
- 
 } = require("@controllers/authController");
 const {
   getAllProfileBaseOnRole,
@@ -16,7 +15,7 @@ const {
   getAllProfileForAdmin,
   ExperienceVerification,
   EducationVerification,
-  CertificationVerification
+  CertificationVerification,
 } = require("@controllers/VerificationController");
 
 const { upload } = require("../services/fileUploads");
@@ -40,7 +39,6 @@ router.get("/getAllProfileForAdmin", getAllProfileForAdmin);
 router.post("/ExperienceVerification", ExperienceVerification);
 router.post("/EducationVerification", EducationVerification);
 router.post("/CertificationVerification", CertificationVerification);
-router.get("/dashboardInfo", dashboardInfo)
-
+router.get("/dashboardInfo", dashboardInfo);
 
 module.exports = router;

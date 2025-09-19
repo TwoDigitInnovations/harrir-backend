@@ -17,18 +17,18 @@ const verificationSchema = new mongoose.Schema(
       default: false,
     },
     phone: {
-      type: String
-  }
+      type: String,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 verificationSchema.set("toJSON", {
   getters: true,
   virtuals: false,
-  transform: (doc, ret, options) => {
+  transform: (doc, ret) => {
     delete ret.__v;
     return ret;
   },

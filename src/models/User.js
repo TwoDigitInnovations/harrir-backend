@@ -37,7 +37,7 @@ const baseUserSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  options
+  options,
 );
 
 baseUserSchema.methods.isPasswordMatch = async function (password) {
@@ -56,10 +56,10 @@ const Professional = User.discriminator(
     fullName: { type: String, trim: true },
     professionalTitle: { type: String, trim: true },
     location: { type: String, trim: true },
+    isPublic: { type: Boolean },
     phone: {
       type: String,
       trim: true,
-      match: [/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"],
     },
     profileImage: { type: String },
     coverImage: { type: String },
@@ -130,7 +130,7 @@ const Professional = User.discriminator(
         level: String,
       },
     ],
-  })
+  }),
 );
 
 // ✅ Discriminator: Company
@@ -172,7 +172,7 @@ const Company = User.discriminator(
         description: String,
       },
     ],
-  })
+  }),
 );
 
 // ✅ Export all

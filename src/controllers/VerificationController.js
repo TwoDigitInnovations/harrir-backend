@@ -1,8 +1,6 @@
 const { User, Professional } = require("../models/User");
 
-
 module.exports = {
-
   getAllProfileBaseOnRole: async (req, res) => {
     try {
       const { role } = req.query;
@@ -95,7 +93,7 @@ module.exports = {
       const updatedData = await User.findByIdAndUpdate(
         id,
         { status },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedData) {
@@ -132,7 +130,7 @@ module.exports = {
       }
 
       const experienceIndex = user.experience.findIndex(
-        (exp) => exp._id.toString() === experienceId
+        (exp) => exp._id.toString() === experienceId,
       );
 
       if (experienceIndex === -1) {
@@ -180,7 +178,7 @@ module.exports = {
       }
 
       const educationIndex = user.education.findIndex(
-        (exp) => exp._id.toString() === educationId
+        (exp) => exp._id.toString() === educationId,
       );
 
       if (educationIndex === -1) {
@@ -228,7 +226,7 @@ module.exports = {
       }
 
       const certificationIndex = user.certifications.findIndex(
-        (cert) => cert._id.toString() === certificationId
+        (cert) => cert._id.toString() === certificationId,
       );
 
       if (certificationIndex === -1) {
@@ -255,5 +253,4 @@ module.exports = {
       });
     }
   },
-
 };

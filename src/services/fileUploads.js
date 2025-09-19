@@ -8,12 +8,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDNARY_API_SECRET,
 });
 
-
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "Hariir_uploads",
-    format: async (req, file) => "png",
+    format: async () => "png",
     public_id: (req, file) => {
       const name = Date.now() + "-" + file.originalname;
       console.log("Uploading with public_id:", name);

@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const response = require("../../responses");
 const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
-const user = require("../helper/user");
 
 module.exports = {
   register: async (req, res) => {
@@ -111,7 +110,7 @@ module.exports = {
       const token = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "4h" }
+        { expiresIn: "4h" },
       );
 
       const userWithoutPassword = user.toObject();
@@ -221,7 +220,7 @@ module.exports = {
         new Date().getTime() < new Date(ver.expiration_at).getTime()
       ) {
         let token = await userHelper.encode(
-          ver._id + ":" + userHelper.getDatewithAddedMinutes(5).getTime()
+          ver._id + ":" + userHelper.getDatewithAddedMinutes(5).getTime(),
         );
         ver.verified = true;
         await ver.save();
@@ -309,5 +308,4 @@ module.exports = {
       });
     }
   },
-
 };
