@@ -93,6 +93,7 @@ const Professional = User.discriminator(
         institution: String,
         year: String,
         description: String,
+        levelOfEducation: String,
         status: {
           type: String,
           enum: ["Pending", "Requested", "Approved", "Rejected"],

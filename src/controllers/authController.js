@@ -308,4 +308,33 @@ module.exports = {
       });
     }
   },
+  getProfileById: async (req, res) => {
+    try {
+      const { id, role } = req.query; // get id and role from query
+ 
+      if (!id || !role) {
+        return res
+          .status(400)
+          .json({ status: false, message: "ID and role are required" });
+      }
+      const user = await User.findOne({ _id: id, role }).select("-password");
+      if (!user) {
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
+      }
+
+      res.status(200).json({
+        status: true,
+        message: "User profile fetched successfully",
+        data: user,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  },
+
 };

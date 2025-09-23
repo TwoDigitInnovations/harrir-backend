@@ -7,6 +7,7 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
+  getProfileById
 } = require("@controllers/authController");
 const {
   getAllProfileBaseOnRole,
@@ -40,5 +41,5 @@ router.post("/ExperienceVerification", ExperienceVerification);
 router.post("/EducationVerification", EducationVerification);
 router.post("/CertificationVerification", CertificationVerification);
 router.get("/dashboardInfo", dashboardInfo);
-
+router.get("/getProfileById", getProfileById);
 module.exports = router;
