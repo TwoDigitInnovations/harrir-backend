@@ -17,6 +17,10 @@ const {
   ExperienceVerification,
   EducationVerification,
   CertificationVerification,
+  requestVerification,
+  getAllVerificationRequest,
+  organizationVerify,
+  adminVerify
 } = require("@controllers/VerificationController");
 
 const { upload } = require("../services/fileUploads");
@@ -42,4 +46,10 @@ router.post("/EducationVerification", EducationVerification);
 router.post("/CertificationVerification", CertificationVerification);
 router.get("/dashboardInfo", dashboardInfo);
 router.get("/getProfileById", getProfileById);
+router.post("/requestVerification", authenticate, requestVerification)
+router.get("/getAllVerificationRequest", getAllVerificationRequest)
+router.post("/organizationVerify", organizationVerify)
+router.post("/adminVerify", authenticate, adminVerify)
+
+
 module.exports = router;

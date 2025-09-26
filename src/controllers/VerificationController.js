@@ -1,4 +1,6 @@
-const { User, Professional } = require("../models/User");
+const { User, Professional, Company } = require("../models/User");
+const Verification = require("../models/experianceVerification");
+const response = require("../../responses");
 
 module.exports = {
   getAllProfileBaseOnRole: async (req, res) => {
@@ -253,4 +255,155 @@ module.exports = {
       });
     }
   },
+
+  requestVerification: async (req, res) => {
+    try {
+      const { experienceId, userId } = req.body;
+
+      const professional = await Professional.findById(userId);
+      if (!professional) {
+        return response.badReq(res, { message: "Professional not found" });
+      }
+
+      const experience = professional.experience.id(experienceId);
+      if (!experience) {
+        return response.badReq(res, { message: "Experience not found" });
+      }
+
+      const company = await Company.findOne({ companyName: experience.company });
+
+      if (!company) {
+        experience.ForAdminStatus = "Requested";
+
+        await professional.save();
+        return response.ok(res, {
+          message: "Your company is not listed in our system. The request has been forwarded for Admin verification."
+        });
+      }
+
+
+      const verification = await Verification.create({
+        user: userId,
+        experience: experience._id,
+        organization: company ? company._id : null,
+      });
+
+      experience.ForOrganizationStatus = "Requested";
+      await professional.save();
+
+      return response.ok(res, {
+        message: "Verification request submitted successfully",
+        verification,
+      });
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+  organizationVerify: async (req, res) => {
+    try {
+      const { verificationId, status, userId } = req.body;
+
+      const verification = await Verification.findById(verificationId);
+      if (!verification) {
+        return response.badReq(res, { message: "Verification not found" });
+      }
+
+      if (String(verification.organization) !== String(userId)) {
+        return response.badReq(res, { message: "Unauthorized action" });
+      }
+
+      verification.organizationStatus = status;
+      await verification.save();
+
+      const professional = await Professional.findById(verification.user);
+      const exp = professional.experience.id(verification.experience);
+      exp.ForOrganizationStatus = status;
+      await professional.save();
+
+      return response.ok(res, {
+        message: `Organization ${status} the experience`,
+        verification,
+      });
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+  adminVerify: async (req, res) => {
+    try {
+      const { adminId, userId, experienceId, status } = req.body;
+
+      const admin = await User.findById(adminId);
+      if (!admin || admin.role !== "Admin") {
+        return response.badRequest(res, { message: "Unauthorized access" });
+      }
+
+      let verification = await Verification.findOne({
+        user: userId,
+        experience: experienceId,
+      });
+      const professional = await Professional.findById(userId);
+      if (!professional) {
+        return response.badRequest(res, { message: "Professional not found" });
+      }
+
+      const exp = professional.experience.id(experienceId);
+      if (!exp) {
+        return response.badRequest(res, { message: "Experience not found" });
+      }
+
+      if (!verification) {
+        exp.ForAdminStatus = status;
+        await professional.save();
+
+        return response.ok(res, {
+          message: `${status} the experience successfully`,
+        });
+      }
+
+      verification.adminStatus = status;
+      exp.ForAdminStatus = status;
+
+      await verification.save();
+      await professional.save();
+
+      return response.ok(res, {
+        message: `${status} the experience successfully`,
+        verification,
+      });
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+
+  getAllVerificationRequest: async (req, res) => {
+    try {
+      const { organizationId } = req.query;
+
+      const verifications = await Verification.find(
+        organizationId ? { organization: organizationId } : {}
+      )
+        .populate("user")
+        .populate("organization")
+        .lean();
+
+      if (!verifications || verifications.length === 0) {
+        return response.ok(res, {
+          message: "No verification requests found",
+          data: [],
+        });
+      }
+
+      return response.ok(res, {
+        message: "Verification requests fetched successfully",
+        data: verifications,
+      });
+    } catch (error) {
+      return response.error(res, error);
+    }
+  },
+
+
+
 };

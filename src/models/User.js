@@ -80,7 +80,12 @@ const Professional = User.discriminator(
         location: String,
         duration: String,
         description: String,
-        status: {
+        ForOrganizationStatus: {
+          type: String,
+          enum: ["Pending", "Requested", "Approved", "Rejected"],
+          default: "Pending",
+        },
+        ForAdminStatus: {
           type: String,
           enum: ["Pending", "Requested", "Approved", "Rejected"],
           default: "Pending",
