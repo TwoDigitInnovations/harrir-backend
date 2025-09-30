@@ -378,31 +378,36 @@ module.exports = {
 
 
   getAllVerificationRequest: async (req, res) => {
-    try {
-      const { organizationId } = req.query;
+  try {
+    const { CompanyId } = req.query;
 
-      const verifications = await Verification.find(
-        organizationId ? { organization: organizationId } : {}
-      )
-        .populate("user")
-        .populate("organization")
-        .lean();
-
-      if (!verifications || verifications.length === 0) {
-        return response.ok(res, {
-          message: "No verification requests found",
-          data: [],
-        });
-      }
-
-      return response.ok(res, {
-        message: "Verification requests fetched successfully",
-        data: verifications,
+    if (!CompanyId) {
+      return response.error(res, {
+        message: "CompanyId is required",
       });
-    } catch (error) {
-      return response.error(res, error);
     }
-  },
+
+    const verifications = await Verification.find({ organization: CompanyId })
+      .populate("user")
+      .populate("organization")
+      .lean();
+
+    if (!verifications || verifications.length === 0) {
+      return response.ok(res, {
+        message: "No verification requests found",
+        data: [],
+      });
+    }
+
+    return response.ok(res, {
+      message: "Verification requests fetched successfully",
+      data: verifications,
+    });
+  } catch (error) {
+    return response.error(res, error);
+  }
+},
+
 
 
 

@@ -1,10 +1,14 @@
 const { User, Professional, Company } = require("../models/User");
 
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const response = require("../../responses");
 const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
+const mailNotification = require("../services/mailNotification")
+
+const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 module.exports = {
   register: async (req, res) => {
@@ -26,11 +30,14 @@ module.exports = {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const verificationToken = generateToken();
 
       const userData = {
         email,
         password: hashedPassword,
         role,
+        isVerified: false,
+        verificationToken,
         ...rest,
       };
 
@@ -44,15 +51,60 @@ module.exports = {
       }
 
       const userResponse = await User.findById(newUser._id).select("-password");
+      console.log(userResponse);
+
+      await mailNotification.VerifyEmail({
+        email: email,
+        token: verificationToken
+      });
+
       return res.status(201).json({
         message: "User registered successfully",
         user: userResponse,
       });
+
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Server error" });
     }
   },
+  verifyEmail: async (req, res) => {
+    try {
+      const { token } = req.query;
+
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+
+      const user = await User.findOne({ verificationToken: token });
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired token" });
+      }
+
+      if (user.isVerified) {
+        return res.json({
+          status: true,
+          message: "Email already verified",
+        });
+      }
+
+      user.isVerified = true;
+      user.verificationToken = null;
+      await user.save();
+
+      return res.json({
+        status: true,
+        message: "Email verified successfully",
+      });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  },
+
+
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -311,7 +363,7 @@ module.exports = {
   getProfileById: async (req, res) => {
     try {
       const { id, role } = req.query; // get id and role from query
- 
+
       if (!id || !role) {
         return res
           .status(400)

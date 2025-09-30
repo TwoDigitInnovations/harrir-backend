@@ -7,7 +7,8 @@ const {
   verifyOTP,
   changePassword,
   updateProfile,
-  getProfileById
+  getProfileById,
+  verifyEmail
 } = require("@controllers/authController");
 const {
   getAllProfileBaseOnRole,
@@ -50,6 +51,6 @@ router.post("/requestVerification", authenticate, requestVerification)
 router.get("/getAllVerificationRequest", getAllVerificationRequest)
 router.post("/organizationVerify", organizationVerify)
 router.post("/adminVerify", authenticate, adminVerify)
-
+router.get("/verify-email",verifyEmail);
 
 module.exports = router;

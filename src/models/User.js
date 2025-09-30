@@ -16,6 +16,13 @@ const baseUserSchema = new mongoose.Schema(
         "Please enter a valid email address",
       ],
     },
+    verificationToken: {
+      type: String,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: true,
@@ -78,8 +85,10 @@ const Professional = User.discriminator(
         jobTitle: String,
         company: String,
         location: String,
-        duration: String,
         description: String,
+        startDate: Date,
+        endDate: Date,
+        isCurrentlyWorking: Boolean,
         ForOrganizationStatus: {
           type: String,
           enum: ["Pending", "Requested", "Approved", "Rejected"],
