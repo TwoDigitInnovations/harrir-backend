@@ -27,7 +27,10 @@ module.exports = {
   },
   getAllProfileForAdmin: async (req, res) => {
     try {
-      const user = await User.find();
+      const user = await User.find({
+        isVerified:
+          true
+      });
       res.status(200).json({
         status: true,
         message: "User profile fetched successfully",
@@ -378,35 +381,45 @@ module.exports = {
 
 
   getAllVerificationRequest: async (req, res) => {
-  try {
-    const { CompanyId } = req.query;
+    try {
+      const { CompanyId } = req.query;
 
-    if (!CompanyId) {
-      return response.error(res, {
-        message: "CompanyId is required",
+      if (!CompanyId) {
+        return response.error(res, {
+          message: "CompanyId is required",
+        });
+      }
+
+      const verifications = await Verification.find({ organization: CompanyId })
+        .populate("user")
+        .populate("organization")
+        .populate("experience")
+        .lean()
+        .sort({ createdAt: -1 });
+
+      if (!verifications || verifications.length === 0) {
+        return response.ok(res, {
+          message: "No verification requests found",
+          data: [],
+        });
+      }
+
+      const data = verifications.map(v => {
+        const userExp = v.user?.experience?.find(exp => exp._id.toString() === v.experience.toString());
+        return {
+          ...v,
+          experience: userExp || null
+        };
       });
-    }
-
-    const verifications = await Verification.find({ organization: CompanyId })
-      .populate("user")
-      .populate("organization")
-      .lean();
-
-    if (!verifications || verifications.length === 0) {
       return response.ok(res, {
-        message: "No verification requests found",
-        data: [],
+        message: "Verification requests fetched successfully",
+        data: data,
       });
+    } catch (error) {
+      return response.error(res, error);
     }
+  },
 
-    return response.ok(res, {
-      message: "Verification requests fetched successfully",
-      data: verifications,
-    });
-  } catch (error) {
-    return response.error(res, error);
-  }
-},
 
 
 

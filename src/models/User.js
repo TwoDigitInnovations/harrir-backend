@@ -89,6 +89,7 @@ const Professional = User.discriminator(
         startDate: Date,
         endDate: Date,
         isCurrentlyWorking: Boolean,
+        employmentType: String,
         ForOrganizationStatus: {
           type: String,
           enum: ["Pending", "Requested", "Approved", "Rejected"],
