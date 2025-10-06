@@ -8,7 +8,7 @@ const {
   changePassword,
   updateProfile,
   getProfileById,
-  verifyEmail
+  verifyEmail,
 } = require("@controllers/authController");
 const {
   getAllProfileBaseOnRole,
@@ -21,7 +21,7 @@ const {
   requestVerification,
   getAllVerificationRequest,
   organizationVerify,
-  adminVerify
+  adminVerify,
 } = require("@controllers/VerificationController");
 
 const { upload } = require("../services/fileUploads");
@@ -47,10 +47,10 @@ router.post("/EducationVerification", EducationVerification);
 router.post("/CertificationVerification", CertificationVerification);
 router.get("/dashboardInfo", dashboardInfo);
 router.get("/getProfileById", getProfileById);
-router.post("/requestVerification", authenticate, requestVerification)
-router.get("/getAllVerificationRequest", getAllVerificationRequest)
-router.post("/organizationVerify", organizationVerify)
-router.post("/adminVerify", authenticate, adminVerify)
-router.get("/verify-email",verifyEmail);
+router.post("/requestVerification", authenticate, requestVerification);
+router.get("/getAllVerificationRequest", getAllVerificationRequest);
+router.post("/organizationVerify", organizationVerify);
+router.post("/adminVerify", authenticate, adminVerify);
+router.get("/verify-email", verifyEmail);
 
 module.exports = router;

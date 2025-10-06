@@ -28,8 +28,7 @@ module.exports = {
   getAllProfileForAdmin: async (req, res) => {
     try {
       const user = await User.find({
-        isVerified:
-          true
+        isVerified: true,
       });
       res.status(200).json({
         status: true,
@@ -273,17 +272,19 @@ module.exports = {
         return response.badReq(res, { message: "Experience not found" });
       }
 
-      const company = await Company.findOne({ companyName: experience.company });
+      const company = await Company.findOne({
+        companyName: experience.company,
+      });
 
       if (!company) {
         experience.ForAdminStatus = "Requested";
 
         await professional.save();
         return response.ok(res, {
-          message: "Your company is not listed in our system. The request has been forwarded for Admin verification."
+          message:
+            "Your company is not listed in our system. The request has been forwarded for Admin verification.",
         });
       }
-
 
       const verification = await Verification.create({
         user: userId,
@@ -379,7 +380,6 @@ module.exports = {
     }
   },
 
-
   getAllVerificationRequest: async (req, res) => {
     try {
       const { CompanyId } = req.query;
@@ -404,11 +404,13 @@ module.exports = {
         });
       }
 
-      const data = verifications.map(v => {
-        const userExp = v.user?.experience?.find(exp => exp._id.toString() === v.experience.toString());
+      const data = verifications.map((v) => {
+        const userExp = v.user?.experience?.find(
+          (exp) => exp._id.toString() === v.experience.toString(),
+        );
         return {
           ...v,
-          experience: userExp || null
+          experience: userExp || null,
         };
       });
       return response.ok(res, {
@@ -419,9 +421,4 @@ module.exports = {
       return response.error(res, error);
     }
   },
-
-
-
-
-
 };

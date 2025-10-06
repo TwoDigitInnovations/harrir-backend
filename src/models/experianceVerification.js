@@ -15,7 +15,7 @@ const VerificationSchema = new mongoose.Schema(
 
     organization: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", 
+      ref: "User",
       default: null,
     },
 
@@ -33,7 +33,6 @@ const VerificationSchema = new mongoose.Schema(
 
     organizationRemark: { type: String, trim: true },
     adminRemark: { type: String, trim: true },
-
   },
   { timestamps: true },
 );

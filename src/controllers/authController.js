@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const response = require("../../responses");
 const Verification = require("@models/verification");
 const userHelper = require("../helper/user");
-const mailNotification = require("../services/mailNotification")
+const mailNotification = require("../services/mailNotification");
 
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
@@ -55,14 +55,13 @@ module.exports = {
 
       await mailNotification.VerifyEmail({
         email: email,
-        token: verificationToken
+        token: verificationToken,
       });
 
       return res.status(201).json({
         message: "User registered successfully",
         user: userResponse,
       });
-
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Server error" });
@@ -73,7 +72,9 @@ module.exports = {
       const { token } = req.query;
 
       if (!token) {
-        return res.status(400).json({ message: "Verification token is required" });
+        return res
+          .status(400)
+          .json({ message: "Verification token is required" });
       }
 
       const user = await User.findOne({ verificationToken: token });
@@ -97,13 +98,11 @@ module.exports = {
         status: true,
         message: "Email verified successfully",
       });
-
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Server error" });
     }
   },
-
 
   login: async (req, res) => {
     try {
@@ -388,5 +387,4 @@ module.exports = {
       });
     }
   },
-
 };
